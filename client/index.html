@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="https://cdn.jsdelivr.net/npm/web3@latest/dist/web3.min.js"></script>
+    <title>Web3-Auth</title>
+</head>
+<body>
+    <button onclick="connect()">Connect</button>
+    <script type="text/javascript">
+        let account = null;
+        let accessToken = null;
+        const connect = async ()=>{
+            if(window.ethereum){
+                await window.ethereum.request({ method: "eth_requestAccounts"})
+                window.web3 = new Web3(window.ethereum)
+                var accounts =await web3.eth.getAccounts()
+                account = accounts[0]
+               accessToken = await authenticate()
+            }
+        }
+
+        const authenticate = async ()=>{
+            let res = await fetch('/temp-token?address='+account)
+            let data = await res.json()
+            let signature = await web3.eth.personal.sign(data.message, account);
+            res =  await fetch('/verify?signature='+signature,{
+                method:'POST',
+                headers:{
+                    contentType:'application/json',
+                    'Authorization':`Bearer ${data.tempToken}`
+                }
+            })
+            data = await res.json();
+            return data.accessToken
+            
+
+        }
+    </script>
+</body>
+</html>
